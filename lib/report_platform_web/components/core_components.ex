@@ -1,50 +1,25 @@
 defmodule ReportPlatformWeb.CoreComponents do
   @moduledoc """
-  Provides core UI components.
+  Editorial primitives: button, input, header, badge, table, flash, list, icon.
 
-  At first glance, this module may seem daunting, but its goal is to provide
-  core building blocks for your application, such as tables, forms, and
-  inputs. The components consist mostly of markup and are well-documented
-  with doc strings and declarative assigns. You may customize and style
-  them in any way you want, based on your application growth and needs.
-
-  The foundation for styling is Tailwind CSS, a utility-first CSS framework,
-  augmented with daisyUI, a Tailwind CSS plugin that provides UI components
-  and themes. Here are useful references:
-
-    * [daisyUI](https://daisyui.com/docs/intro/) - a good place to get
-      started and see the available components.
-
-    * [Tailwind CSS](https://tailwindcss.com) - the foundational framework
-      we build on. You will use it for layout, sizing, flexbox, grid, and
-      spacing.
-
-    * [Heroicons](https://heroicons.com) - see `icon/1` for usage.
-
-    * [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) -
-      the component system used by Phoenix. Some components, such as `<.link>`
-      and `<.form>`, are defined there.
-
+  Built on raw Tailwind 4 with CSS variables defined in `assets/css/app.css`.
+  daisyUI has been removed.
   """
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
 
-  @doc """
-  Renders flash notices.
+  # ──────────────────────────────────────────────────────────────────────────
+  # Flash
+  # ──────────────────────────────────────────────────────────────────────────
 
-  ## Examples
-
-      <.flash kind={:info} flash={@flash} />
-      <.flash kind={:info} phx-mounted={show("#flash")}>Welcome Back!</.flash>
-  """
-  attr :id, :string, doc: "the optional id of flash container"
-  attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
+  attr :id, :string
+  attr :flash, :map, default: %{}
   attr :title, :string, default: nil
-  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
-  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
+  attr :kind, :atom, values: [:info, :error]
+  attr :rest, :global
 
-  slot :inner_block, doc: "the optional inner block that renders the flash message"
+  slot :inner_block
 
   def flash(assigns) do
     assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
@@ -55,106 +30,130 @@ defmodule ReportPlatformWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class="fixed top-4 right-4 z-50 w-80 sm:w-96 cursor-pointer"
       {@rest}
     >
-      <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
-        @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
-      ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
-        <div>
-          <p :if={@title} class="font-semibold">{@title}</p>
-          <p>{msg}</p>
+      <div class="group flex gap-3 bg-[color:var(--surface)] border border-[color:var(--rule-strong)] p-4 shadow-[var(--shadow-lift)]">
+        <span class={[
+          "mt-1 dot shrink-0",
+          @kind == :info && "dot-accent",
+          @kind == :error && "dot-err"
+        ]} />
+        <div class="flex-1 min-w-0 space-y-1">
+          <p :if={@title} class="eyebrow text-[color:var(--ink)]">{@title}</p>
+          <p class="text-[13px] leading-snug text-[color:var(--ink)]">{msg}</p>
         </div>
-        <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label="close">
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+        <button
+          type="button"
+          class="shrink-0 text-[color:var(--muted)] hover:text-[color:var(--ink)] transition-colors"
+          aria-label="close"
+        >
+          <.icon name="hero-x-mark" class="size-4" />
         </button>
       </div>
     </div>
     """
   end
 
+  # ──────────────────────────────────────────────────────────────────────────
+  # Button
+  # ──────────────────────────────────────────────────────────────────────────
+
   @doc """
-  Renders a button with navigation support.
+  Editorial button with three variants.
 
-  ## Examples
-
-      <.button>Send!</.button>
-      <.button phx-click="go" variant="primary">Send!</.button>
-      <.button navigate={~p"/"}>Home</.button>
+  - `:primary` — filled vermillion, white text. Use for the single dominant action.
+  - `:ghost` — hairline outline, inherits ink color. Use for neutral actions.
+  - `:quiet` — underline-on-hover text-only link. Use inside dense layouts (tables, catalogs).
   """
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
-  attr :class, :any
-  attr :variant, :string, values: ~w(primary)
+  attr :rest, :global,
+    include: ~w(href navigate patch method download name value disabled type form)
+
+  attr :class, :any, default: nil
+  attr :variant, :atom, default: :primary, values: [:primary, :ghost, :quiet]
+  attr :size, :atom, default: :md, values: [:sm, :md]
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
-
-    assigns =
-      assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
-      end)
+    assigns = assign(assigns, :classes, button_classes(assigns))
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
-      <.link class={@class} {@rest}>
+      <.link class={@classes} {@rest}>
         {render_slot(@inner_block)}
       </.link>
       """
     else
       ~H"""
-      <button class={@class} {@rest}>
+      <button class={@classes} {@rest}>
         {render_slot(@inner_block)}
       </button>
       """
     end
   end
 
-  @doc """
-  Renders an input with label and error messages.
+  defp button_classes(%{variant: variant, size: size, class: class}) do
+    base =
+      "inline-flex items-center justify-center gap-2 font-medium transition-colors focus-ring disabled:opacity-40 disabled:cursor-not-allowed select-none"
 
-  A `Phoenix.HTML.FormField` may be passed as argument,
-  which is used to retrieve the input name, id, and values.
-  Otherwise all attributes may be passed explicitly.
+    sizing =
+      case size do
+        :sm -> "h-8 px-3 text-[12px]"
+        :md -> "h-10 px-5 text-[13px]"
+      end
 
-  ## Types
+    variant_class =
+      case variant do
+        :primary ->
+          "bg-[color:var(--accent)] text-[color:var(--accent-ink)] hover:brightness-105 active:brightness-95"
 
-  This function accepts all HTML input types, considering that:
+        :ghost ->
+          "border border-[color:var(--rule-strong)] text-[color:var(--ink)] hover:bg-[color:var(--surface)]"
 
-    * You may also set `type="select"` to render a `<select>` tag
+        :quiet ->
+          "px-0 h-auto text-[color:var(--ink)] hover:text-[color:var(--accent)] gap-1.5 group"
+      end
 
-    * `type="checkbox"` is used exclusively to render boolean values
+    [base, sizing, variant_class, class]
+  end
 
-    * For live file uploads, see `Phoenix.Component.live_file_input/1`
+  # ──────────────────────────────────────────────────────────────────────────
+  # Badge
+  # ──────────────────────────────────────────────────────────────────────────
 
-  See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-  for more information. Unsupported types, such as radio, are best
-  written directly in your templates.
+  attr :tone, :atom, default: :neutral, values: [:neutral, :ok, :warn, :err, :accent]
+  attr :class, :any, default: nil
+  slot :inner_block, required: true
 
-  ## Examples
+  def badge(assigns) do
+    ~H"""
+    <span class={[
+      "inline-flex items-center gap-1.5 px-2 h-5 border text-[10px] font-mono tracking-[0.14em] uppercase",
+      badge_tone(@tone),
+      @class
+    ]}>
+      <span class={["dot", badge_dot(@tone)]} />
+      {render_slot(@inner_block)}
+    </span>
+    """
+  end
 
-  ```heex
-  <.input field={@form[:email]} type="email" />
-  <.input name="my-input" errors={["oh no!"]} />
-  ```
+  defp badge_tone(:neutral), do: "border-[color:var(--rule-strong)] text-[color:var(--muted)]"
+  defp badge_tone(:ok), do: "border-[color:var(--ok)] text-[color:var(--ok)]"
+  defp badge_tone(:warn), do: "border-[color:var(--warn)] text-[color:var(--warn)]"
+  defp badge_tone(:err), do: "border-[color:var(--err)] text-[color:var(--err)]"
+  defp badge_tone(:accent), do: "border-[color:var(--accent)] text-[color:var(--accent)]"
 
-  ## Select type
+  defp badge_dot(:neutral), do: ""
+  defp badge_dot(:ok), do: "dot-ok"
+  defp badge_dot(:warn), do: "dot-warn"
+  defp badge_dot(:err), do: "dot-err"
+  defp badge_dot(:accent), do: "dot-accent"
 
-  When using `type="select"`, you must pass the `options` and optionally
-  a `value` to mark which option should be preselected.
+  # ──────────────────────────────────────────────────────────────────────────
+  # Input
+  # ──────────────────────────────────────────────────────────────────────────
 
-  ```heex
-  <.input field={@form[:user_type]} type="select" options={["Admin": "admin", "User": "user"]} />
-  ```
-
-  For more information on what kind of data can be passed to `options` see
-  [`options_for_select`](https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html#options_for_select/2).
-  """
   attr :id, :any, default: nil
   attr :name, :any
   attr :label, :string, default: nil
@@ -165,16 +164,13 @@ defmodule ReportPlatformWeb.CoreComponents do
     values: ~w(checkbox color date datetime-local email file month number password
                search select tel text textarea time url week hidden)
 
-  attr :field, Phoenix.HTML.FormField,
-    doc: "a form field struct retrieved from the form, for example: @form[:email]"
-
+  attr :field, Phoenix.HTML.FormField
   attr :errors, :list, default: []
-  attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
-  attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
-  attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
-  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
-  attr :class, :any, default: nil, doc: "the input class to use over defaults"
-  attr :error_class, :any, default: nil, doc: "the input error class to use over defaults"
+  attr :checked, :boolean
+  attr :prompt, :string, default: nil
+  attr :options, :list
+  attr :multiple, :boolean, default: false
+  attr :class, :any, default: nil
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
@@ -204,8 +200,8 @@ defmodule ReportPlatformWeb.CoreComponents do
       end)
 
     ~H"""
-    <div class="fieldset mb-2">
-      <label for={@id}>
+    <div class="space-y-2 py-2">
+      <label for={@id} class="flex items-center gap-3 cursor-pointer text-[13px]">
         <input
           type="hidden"
           name={@name}
@@ -213,17 +209,16 @@ defmodule ReportPlatformWeb.CoreComponents do
           disabled={@rest[:disabled]}
           form={@rest[:form]}
         />
-        <span class="label">
-          <input
-            type="checkbox"
-            id={@id}
-            name={@name}
-            value="true"
-            checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
-            {@rest}
-          />{@label}
-        </span>
+        <input
+          type="checkbox"
+          id={@id}
+          name={@name}
+          value="true"
+          checked={@checked}
+          class="size-4 accent-[color:var(--accent)] focus-ring"
+          {@rest}
+        />
+        <span class="text-[color:var(--ink)]">{@label}</span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
@@ -232,20 +227,30 @@ defmodule ReportPlatformWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label for={@id}>
-        <span :if={@label} class="label mb-1">{@label}</span>
+    <div class="space-y-1.5">
+      <label :if={@label} for={@id} class="eyebrow block">{@label}</label>
+      <div class="relative">
         <select
           id={@id}
           name={@name}
-          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
+          class={[
+            "w-full appearance-none bg-transparent border-0 border-b pb-2 pt-1 pr-8",
+            "text-[14px] text-[color:var(--ink)] focus:outline-none focus:border-[color:var(--accent)]",
+            "font-mono tracking-tight",
+            @errors == [] && "border-[color:var(--rule-strong)]",
+            @errors != [] && "border-[color:var(--err)]",
+            @class
+          ]}
           multiple={@multiple}
           {@rest}
         >
           <option :if={@prompt} value="">{@prompt}</option>
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
-      </label>
+        <span class="pointer-events-none absolute right-1 bottom-2.5 text-[color:var(--muted)]">
+          <.icon name="hero-chevron-down-micro" class="size-4" />
+        </span>
+      </div>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -253,104 +258,116 @@ defmodule ReportPlatformWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label for={@id}>
-        <span :if={@label} class="label mb-1">{@label}</span>
-        <textarea
-          id={@id}
-          name={@name}
-          class={[
-            @class || "w-full textarea",
-            @errors != [] && (@error_class || "textarea-error")
-          ]}
-          {@rest}
-        >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
-      </label>
+    <div class="space-y-1.5">
+      <label :if={@label} for={@id} class="eyebrow block">{@label}</label>
+      <textarea
+        id={@id}
+        name={@name}
+        class={[
+          "w-full bg-transparent border-0 border-b py-2 text-[14px] text-[color:var(--ink)]",
+          "focus:outline-none focus:border-[color:var(--accent)] resize-y",
+          @errors == [] && "border-[color:var(--rule-strong)]",
+          @errors != [] && "border-[color:var(--err)]",
+          @class
+        ]}
+        {@rest}
+      >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
 
-  # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label for={@id}>
-        <span :if={@label} class="label mb-1">{@label}</span>
-        <input
-          type={@type}
-          name={@name}
-          id={@id}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={[
-            @class || "w-full input",
-            @errors != [] && (@error_class || "input-error")
-          ]}
-          {@rest}
-        />
-      </label>
+    <div class="space-y-1.5">
+      <label :if={@label} for={@id} class="eyebrow block">{@label}</label>
+      <input
+        type={@type}
+        name={@name}
+        id={@id}
+        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        class={[
+          "w-full bg-transparent border-0 border-b py-2 text-[14px]",
+          "text-[color:var(--ink)] placeholder:text-[color:var(--faint)]",
+          "focus:outline-none focus:border-[color:var(--accent)]",
+          @type in ["number", "date", "datetime-local", "time"] && "font-mono tracking-tight",
+          @errors == [] && "border-[color:var(--rule-strong)]",
+          @errors != [] && "border-[color:var(--err)]",
+          @class
+        ]}
+        {@rest}
+      />
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
 
-  # Helper used by inputs to generate form errors
   defp error(assigns) do
     ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle" class="size-5" />
+    <p class="flex gap-2 items-center text-[12px] text-[color:var(--err)]">
+      <.icon name="hero-exclamation-circle-micro" class="size-3.5" />
       {render_slot(@inner_block)}
     </p>
     """
   end
 
+  # ──────────────────────────────────────────────────────────────────────────
+  # Header
+  # ──────────────────────────────────────────────────────────────────────────
+
   @doc """
-  Renders a header with title.
+  Editorial section header: eyebrow, display title, thin rule, subtitle.
   """
+  attr :eyebrow, :string, default: nil
+  attr :aside, :string, default: nil
   slot :inner_block, required: true
   slot :subtitle
   slot :actions
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
-      <div>
-        <h1 class="text-lg font-semibold leading-8">
-          {render_slot(@inner_block)}
-        </h1>
-        <p :if={@subtitle != []} class="text-sm text-base-content/70">
-          {render_slot(@subtitle)}
+    <header class="space-y-4">
+      <div class="flex items-start justify-between gap-6">
+        <div class="space-y-3">
+          <p :if={@eyebrow} class="eyebrow">{@eyebrow}</p>
+          <h1 class="display text-[56px] sm:text-[72px] text-[color:var(--ink)]">
+            {render_slot(@inner_block)}
+          </h1>
+        </div>
+        <p :if={@aside} class="num text-[12px] text-[color:var(--muted)] shrink-0 mt-2">
+          {@aside}
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      <div class="h-px bg-[color:var(--rule-strong)]" />
+      <div class="flex items-start justify-between gap-6">
+        <p
+          :if={@subtitle != []}
+          class="max-w-2xl text-[15px] leading-relaxed text-[color:var(--muted)]"
+        >
+          {render_slot(@subtitle)}
+        </p>
+        <div :if={@actions != []} class="shrink-0">{render_slot(@actions)}</div>
+      </div>
     </header>
     """
   end
 
-  @doc """
-  Renders a table with generic styling.
+  # ──────────────────────────────────────────────────────────────────────────
+  # Table (generic, used by History)
+  # ──────────────────────────────────────────────────────────────────────────
 
-  ## Examples
-
-      <.table id="users" rows={@users}>
-        <:col :let={user} label="id">{user.id}</:col>
-        <:col :let={user} label="username">{user.username}</:col>
-      </.table>
-  """
   attr :id, :string, required: true
   attr :rows, :list, required: true
-  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
-  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
-
-  attr :row_item, :any,
-    default: &Function.identity/1,
-    doc: "the function for mapping each row before calling the :col and :action slots"
+  attr :row_id, :any, default: nil
+  attr :row_click, :any, default: nil
+  attr :row_item, :any, default: &Function.identity/1
 
   slot :col, required: true do
     attr :label, :string
+    attr :class, :string
   end
 
-  slot :action, doc: "the slot for showing user actions in the last table column"
+  slot :action
 
   def table(assigns) do
     assigns =
@@ -359,26 +376,51 @@ defmodule ReportPlatformWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
+    <table class="w-full border-separate border-spacing-0 text-[13px]">
       <thead>
         <tr>
-          <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
-            <span class="sr-only">Actions</span>
+          <th
+            :for={col <- @col}
+            class={[
+              "text-left eyebrow pb-3 border-b border-[color:var(--rule-strong)]",
+              Map.get(col, :class)
+            ]}
+          >
+            {col[:label]}
+          </th>
+          <th
+            :if={@action != []}
+            class="text-right eyebrow pb-3 border-b border-[color:var(--rule-strong)]"
+          >
+            <span>Actions</span>
           </th>
         </tr>
       </thead>
-      <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
+      <tbody
+        id={@id}
+        phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}
+      >
+        <tr
+          :for={row <- @rows}
+          id={@row_id && @row_id.(row)}
+          class="group relative transition-colors hover:bg-[color:var(--surface)]"
+        >
           <td
             :for={col <- @col}
             phx-click={@row_click && @row_click.(row)}
-            class={@row_click && "hover:cursor-pointer"}
+            class={[
+              "border-b border-[color:var(--rule)] py-3 align-middle",
+              @row_click && "hover:cursor-pointer",
+              Map.get(col, :class)
+            ]}
           >
             {render_slot(col, @row_item.(row))}
           </td>
-          <td :if={@action != []} class="w-0 font-semibold">
-            <div class="flex gap-4">
+          <td
+            :if={@action != []}
+            class="border-b border-[color:var(--rule)] py-3 text-right"
+          >
+            <div class="flex gap-4 justify-end">
               <%= for action <- @action do %>
                 {render_slot(action, @row_item.(row))}
               <% end %>
@@ -390,51 +432,31 @@ defmodule ReportPlatformWeb.CoreComponents do
     """
   end
 
-  @doc """
-  Renders a data list.
+  # ──────────────────────────────────────────────────────────────────────────
+  # Data list
+  # ──────────────────────────────────────────────────────────────────────────
 
-  ## Examples
-
-      <.list>
-        <:item title="Title">{@post.title}</:item>
-        <:item title="Views">{@post.views}</:item>
-      </.list>
-  """
   slot :item, required: true do
     attr :title, :string, required: true
   end
 
   def list(assigns) do
     ~H"""
-    <ul class="list">
-      <li :for={item <- @item} class="list-row">
-        <div class="list-col-grow">
-          <div class="font-bold">{item.title}</div>
-          <div>{render_slot(item)}</div>
-        </div>
-      </li>
-    </ul>
+    <dl class="divide-y divide-[color:var(--rule)]">
+      <div :for={item <- @item} class="py-3 flex items-baseline gap-6">
+        <dt class="eyebrow w-32 shrink-0">{item.title}</dt>
+        <dd class="text-[13px] text-[color:var(--ink)] num flex-1 min-w-0 truncate">
+          {render_slot(item)}
+        </dd>
+      </div>
+    </dl>
     """
   end
 
-  @doc """
-  Renders a [Heroicon](https://heroicons.com).
+  # ──────────────────────────────────────────────────────────────────────────
+  # Icon — heroicons via CSS plugin.
+  # ──────────────────────────────────────────────────────────────────────────
 
-  Heroicons come in three styles – outline, solid, and mini.
-  By default, the outline style is used, but solid and mini may
-  be applied by using the `-solid` and `-mini` suffix.
-
-  You can customize the size and colors of the icons by setting
-  width, height, and background color classes.
-
-  Icons are extracted from the `deps/heroicons` directory and bundled within
-  your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
-
-  ## Examples
-
-      <.icon name="hero-x-mark" />
-      <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
-  """
   attr :name, :string, required: true
   attr :class, :any, default: "size-4"
 
@@ -444,50 +466,40 @@ defmodule ReportPlatformWeb.CoreComponents do
     """
   end
 
-  ## JS Commands
+  # ──────────────────────────────────────────────────────────────────────────
+  # JS helpers
+  # ──────────────────────────────────────────────────────────────────────────
 
   def show(js \\ %JS{}, selector) do
     JS.show(js,
       to: selector,
-      time: 300,
+      time: 260,
       transition:
-        {"transition-all ease-out duration-300",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
-         "opacity-100 translate-y-0 sm:scale-100"}
+        {"transition-all ease-out duration-260", "opacity-0 translate-y-2",
+         "opacity-100 translate-y-0"}
     )
   end
 
   def hide(js \\ %JS{}, selector) do
     JS.hide(js,
       to: selector,
-      time: 200,
+      time: 180,
       transition:
-        {"transition-all ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
+        {"transition-all ease-in duration-180", "opacity-100 translate-y-0",
+         "opacity-0 translate-y-2"}
     )
   end
 
-  @doc """
-  Translates an error message using gettext.
-  """
+  # ──────────────────────────────────────────────────────────────────────────
+  # Error translation (gettext stub kept for symmetry)
+  # ──────────────────────────────────────────────────────────────────────────
+
   def translate_error({msg, opts}) do
-    # You can make use of gettext to translate error messages by
-    # uncommenting and adjusting the following code:
-
-    # if count = opts[:count] do
-    #   Gettext.dngettext(ReportPlatformWeb.Gettext, "errors", msg, msg, count, opts)
-    # else
-    #   Gettext.dgettext(ReportPlatformWeb.Gettext, "errors", msg, opts)
-    # end
-
     Enum.reduce(opts, msg, fn {key, value}, acc ->
       String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
     end)
   end
 
-  @doc """
-  Translates the errors for a field from a keyword list of errors.
-  """
   def translate_errors(errors, field) when is_list(errors) do
     for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
   end
