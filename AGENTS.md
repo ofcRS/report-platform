@@ -30,7 +30,7 @@ custom classes must fully style the input
 
 - **Always use and maintain this import syntax** in the app.css file for projects generated with `phx.new`
 - **Never** use `@apply` when writing raw css
-- **This project uses daisyUI 5** for layout primitives (card, btn, badge, steps, table, alert). Use daisyUI classes first; reach for raw Tailwind for typography, spacing, and fine-tuning. Keeping a consistent component vocabulary is valued here over a hand-built "world-class" look — this is an internal reporting tool, not a marketing site.
+- **This project uses raw Tailwind 4 + a small custom token layer** defined in `assets/css/app.css` (CSS variables: `--bg`, `--surface`, `--ink`, `--muted`, `--rule`, `--accent`, …). The UI primitives (`<.button>`, `<.input>`, `<.badge>`, `<.header>`, `<.table>`, `<.flash>`) live in `lib/report_platform_web/components/core_components.ex`. Reach for existing primitives first; when you add a new one, keep it hairline-bounded, typographically led (Fraunces display / Instrument Sans body / JetBrains Mono numerics), and use the accent color sparingly. daisyUI is **not** installed — don't reach for `card`, `btn-primary`, `badge-success`, `steps`, `alert-*` etc.
 - Out of the box **only the app.js and app.css bundles are supported**
   - You cannot reference an external vendor'd script `src` or link `href` in the layouts
   - You must import the vendor deps into app.js and app.css to use them
