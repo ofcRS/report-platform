@@ -6,6 +6,27 @@
 
 An internal tool where developers register reports as Elixir modules and analysts run them from a web UI. Reports generate asynchronously; the page shows live status and, when ready, a download button.
 
+![Reports catalog, light theme](./docs/screenshots/catalog-light.png)
+
+<details>
+<summary>More screenshots — run detail, history, dark theme</summary>
+
+<br>
+
+Run detail with live status stream (light):
+
+![Run detail showing a completed Top Coins Snapshot run](./docs/screenshots/run-done-light.png)
+
+Run history (dark):
+
+![Run history table with one completed run](./docs/screenshots/history-dark.png)
+
+Catalog in dark theme:
+
+![Reports catalog, dark theme](./docs/screenshots/catalog-dark.png)
+
+</details>
+
 Two reports ship in the box to demonstrate the pattern across sources and formats:
 
 | Report              | Source                     | Format |

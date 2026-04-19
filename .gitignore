@@ -43,8 +43,10 @@ npm-debug.log
 /priv/artifacts_test/
 
 # Playwright MCP snapshots + screenshots captured during verification.
+# Anchored to the repo root so docs/screenshots/ remains tracked.
 /.playwright-mcp/
-catalog.png
-history.png
-run-*.png
+/catalog*.png
+/history*.png
+/run-*.png
+/redesign-*.png
 
