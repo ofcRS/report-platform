@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: report_platform_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: report_platform
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      # Use the host network during build only. Docker's default build network
+      # inherits /etc/resolv.conf from the host, which on hosts using
+      # systemd-resolved points at 127.0.0.53 — unreachable from inside a
+      # container and breaks apt-get. This does NOT affect runtime networking.
+      network: host
+    container_name: report_platform_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "ecto://postgres:postgres@postgres:5432/report_platform"
+      # Required. Generate with `mix phx.gen.secret` and put in .env (never committed).
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?set SECRET_KEY_BASE in .env — run `mix phx.gen.secret`}
+      PHX_HOST: ${PHX_HOST:-localhost}
+      PHX_SERVER: "true"
+      PORT: "4000"
+      POOL_SIZE: "10"
+      ARTIFACT_ROOT: /app/artifacts
+    # Bind to the loopback of the remote host so the container is only reachable
+    # via nginx (which terminates TLS and proxies to 127.0.0.1:4001). For a purely
+    # local `docker compose up` run on a dev laptop, change this to "4000:4000".
+    ports:
+      - "127.0.0.1:4001:4000"
+    volumes:
+      - artifacts:/app/artifacts
+    command: sh -c "/app/bin/migrate && /app/bin/seed && /app/bin/server"
+
+volumes:
+  postgres_data:
+  artifacts:

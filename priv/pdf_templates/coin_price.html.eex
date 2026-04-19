@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title><%= title %></title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.4;
+    font-size: 11pt;
+  }
+  header { border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 18px; }
+  header h1 { margin: 0; font-size: 20pt; }
+  header .sub { color: #475569; margin-top: 4px; font-size: 10pt; }
+  .stats {
+    display: flex;
+    gap: 12px;
+    margin: 14px 0 20px;
+  }
+  .stat {
+    flex: 1;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .stat .label { text-transform: uppercase; letter-spacing: 0.04em; font-size: 8pt; color: #64748b; }
+  .stat .value { font-size: 14pt; font-weight: 600; margin-top: 2px; }
+  .stat .value.up { color: #16a34a; }
+  .stat .value.down { color: #dc2626; }
+  .chart-wrap { page-break-inside: avoid; margin-bottom: 16px; }
+  .chart-wrap h2 {
+    font-size: 12pt;
+    margin: 0 0 6px;
+    color: #334155;
+    font-weight: 600;
+  }
+  canvas { width: 100% !important; height: 260px !important; }
+  footer {
+    margin-top: 18px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+    color: #64748b;
+    font-size: 8pt;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><%= title %></h1>
+  <div class="sub"><%= coin_label %> &middot; last <%= days %> day(s) &middot; generated <%= generated_at %></div>
+</header>
+
+<div class="stats">
+  <div class="stat">
+    <div class="label">Latest</div>
+    <div class="value">$<%= current_price %></div>
+  </div>
+  <div class="stat">
+    <div class="label">Period high</div>
+    <div class="value">$<%= high %></div>
+  </div>
+  <div class="stat">
+    <div class="label">Period low</div>
+    <div class="value">$<%= low %></div>
+  </div>
+  <div class="stat">
+    <div class="label">Change</div>
+    <div class="value <%= change_cls %>"><%= change_pct %>%</div>
+  </div>
+</div>
+
+<div class="chart-wrap">
+  <h2>Price (USD)</h2>
+  <canvas id="priceChart"></canvas>
+</div>
+
+<div class="chart-wrap">
+  <h2>24h Volume (USD)</h2>
+  <canvas id="volumeChart"></canvas>
+</div>
+
+<footer>
+  <span>Source: CoinGecko public API</span>
+  <span>Report Platform</span>
+</footer>
+
+<script><%= chart_js %></script>
+<script>
+  const labels = <%= labels_json %>;
+  const prices = <%= prices_json %>;
+  const volumes = <%= volumes_json %>;
+
+  const commonOpts = {
+    responsive: false,
+    maintainAspectRatio: false,
+    animation: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { maxTicksLimit: 8, font: { size: 8 } } },
+      y: { ticks: { font: { size: 8 } } }
+    }
+  };
+
+  new Chart(document.getElementById("priceChart"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: prices,
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37,99,235,0.12)",
+        fill: true,
+        pointRadius: 0,
+        borderWidth: 1.5,
+        tension: 0.2
+      }]
+    },
+    options: commonOpts
+  });
+
+  new Chart(document.getElementById("volumeChart"), {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: volumes,
+        backgroundColor: "#0f766e",
+        borderWidth: 0
+      }]
+    },
+    options: commonOpts
+  });
+</script>
+
+</body>
+</html>
