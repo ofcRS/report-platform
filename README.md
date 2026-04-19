@@ -1,5 +1,7 @@
 # Report Platform
 
+[![CI](https://github.com/ofcRS/report-platform/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/ofcRS/report-platform/actions/workflows/ci-cd.yml)
+
 **Live demo**: https://reports.shck.dev
 
 An internal tool where developers register reports as Elixir modules and analysts run them from a web UI. Reports generate asynchronously; the page shows live status and, when ready, a download button.

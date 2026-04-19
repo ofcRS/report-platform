@@ -17,6 +17,7 @@ services:
       retries: 10
 
   app:
+    image: ghcr.io/ofcrs/report-platform:latest
     build:
       context: .
       # Use the host network during build only. Docker's default build network
