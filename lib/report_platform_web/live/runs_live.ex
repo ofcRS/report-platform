@@ -55,7 +55,7 @@ defmodule ReportPlatformWeb.RunsLive do
             parameters, or download the artifact if it's still on disk.
           </:subtitle>
           <:actions>
-            <form phx-change="filter" id="filter-form" class="flex items-end gap-3">
+            <form phx-change="filter" id="filter-form" class="flex items-baseline gap-3">
               <label for="report_id" class="eyebrow">Filter</label>
               <div class="relative">
                 <select
@@ -76,11 +76,11 @@ defmodule ReportPlatformWeb.RunsLive do
           </:actions>
         </.header>
 
-        <div class="overflow-x-auto -mx-1">
+        <div class="overflow-x-auto">
           <table class="w-full border-separate border-spacing-0 text-[13px]">
             <thead>
               <tr>
-                <th class="text-left eyebrow pb-3 border-b border-[color:var(--rule-strong)] pl-1 w-14">
+                <th class="text-left eyebrow pb-3 border-b border-[color:var(--rule-strong)] pl-4 w-14">
                   #
                 </th>
                 <th class="text-left eyebrow pb-3 border-b border-[color:var(--rule-strong)]">
@@ -95,7 +95,7 @@ defmodule ReportPlatformWeb.RunsLive do
                 <th class="text-left eyebrow pb-3 border-b border-[color:var(--rule-strong)] w-52">
                   Created
                 </th>
-                <th class="text-right eyebrow pb-3 border-b border-[color:var(--rule-strong)] w-48 pr-1">
+                <th class="text-right eyebrow pb-3 border-b border-[color:var(--rule-strong)] w-48 pr-4">
                   Actions
                 </th>
               </tr>
@@ -121,7 +121,7 @@ defmodule ReportPlatformWeb.RunsLive do
                 id={dom_id}
                 class="group relative hover:bg-[color:var(--surface)] transition-colors"
               >
-                <td class="border-b border-[color:var(--rule)] py-4 pl-1 align-middle">
+                <td class="border-b border-[color:var(--rule)] py-4 pl-4 align-middle">
                   <span class="num text-[color:var(--muted)]">#{run.id}</span>
                 </td>
                 <td class="border-b border-[color:var(--rule)] py-4 align-middle">
@@ -142,7 +142,7 @@ defmodule ReportPlatformWeb.RunsLive do
                     {format_time(run.inserted_at)}
                   </span>
                 </td>
-                <td class="border-b border-[color:var(--rule)] py-4 text-right pr-1 align-middle">
+                <td class="border-b border-[color:var(--rule)] py-4 pr-4 text-right align-middle">
                   <div class="flex gap-4 justify-end items-center text-[12px]">
                     <a
                       :if={run.status == :done}

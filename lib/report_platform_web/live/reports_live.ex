@@ -25,7 +25,7 @@ defmodule ReportPlatformWeb.ReportsLive do
           <li :for={{report, index} <- Enum.with_index(@reports, 1)} class="group">
             <.link
               navigate={~p"/reports/#{report.id}"}
-              class="relative grid grid-cols-12 gap-6 py-10 px-1 items-baseline focus-ring hover:bg-[color:var(--surface)] transition-colors"
+              class="relative grid grid-cols-12 gap-6 py-10 px-4 items-baseline focus-ring hover:bg-[color:var(--surface)] transition-colors"
             >
               <span class="col-span-1 num text-[12px] text-[color:var(--muted)] tracking-tight pt-2">
                 — {index |> Integer.to_string() |> String.pad_leading(2, "0")}
