@@ -169,6 +169,8 @@ http = Map.get(ctx, :http, ReportPlatform.Sources.Http)
 
 Both `ctx.postgres` and `ctx.http` are swappable in tests — pass a stub module that returns deterministic fixtures.
 
+> Claude Code users: `.claude/skills/add-report/SKILL.md` packages this walkthrough as an invocable skill with ready-to-copy Postgres→XLSX and HTTP→PDF templates.
+
 ## 4. Key decisions
 
 | Decision | What we picked | Why, and what we rejected |
