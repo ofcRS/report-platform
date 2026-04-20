@@ -46,7 +46,7 @@ docker compose up --build
 
 After the image builds and Postgres is healthy, open http://localhost:4001 (app) — migrations and seeds run on startup.
 
-Port layout: Postgres on host 5433 (5432 is usually taken by a host install), app container on host 127.0.0.1:4001 (4000 is reserved for your local `mix phx.server` in dev mode — see [DEVELOPMENT.md](./DEVELOPMENT.md)).
+Port layout: Postgres on host 5433 (5432 is usually taken by a host install), app container on host 127.0.0.1:4001 (4000 is reserved for your local `mix phx.server` in dev mode).
 
 ## Local development
 
@@ -112,6 +112,3 @@ config/
 
 See **[ARCHITECTURE.md](./ARCHITECTURE.md)** — covers the Report behaviour, the run lifecycle with PubSub, decision trade-offs, and the production roadmap.
 
-## Development
-
-See **[DEVELOPMENT.md](./DEVELOPMENT.md)** — three supported modes (all local, local dev + remote DB, full remote via `docker context` over SSH), SSH tunnel workflow, and the ops gotchas we hit (BuildKit DNS, Chromium vs Chrome, Docker user HOME, volume perms).

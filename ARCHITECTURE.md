@@ -235,6 +235,6 @@ Deploy flow:
 docker --context reports-remote compose up -d --build
 ```
 
-That uploads the build context over SSH, rebuilds the release image on the VPS, and rolls the container. The Postgres container is untouched. On a clean server the one-time setup is: clone the repo into `/opt/report-platform`, `cp .env.example .env`, fill `SECRET_KEY_BASE`, drop the nginx site block, run certbot. See [DEVELOPMENT.md](./DEVELOPMENT.md) for the concrete commands.
+That uploads the build context over SSH, rebuilds the release image on the VPS, and rolls the container. The Postgres container is untouched. On a clean server the one-time setup is: clone the repo into `/opt/report-platform`, `cp .env.example .env`, fill `SECRET_KEY_BASE`, drop the nginx site block, run certbot.
 
 Not yet wired, noted in §5 "CI/CD pipeline": a GitHub Actions workflow that builds on push to `main`, pushes to GHCR, SSHes the VPS, and pulls + restarts.
